@@ -1,3 +1,10 @@
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+.vscode
+package-lock.json
+
 # Logs
 logs
 *.log
