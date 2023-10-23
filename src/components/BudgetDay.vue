@@ -1,7 +1,7 @@
 <template>
     <div class="day">
         <h3>{{ day }}</h3>
-        <p>{{ budget }}</p>
+        <p :class="{ 'over-budget': overBudget }">{{ formatBudget }}</p>
     </div>
 </template>
 
@@ -16,6 +16,19 @@ export default {
             type: Number,
             required: true
         }
+    },
+
+    computed: {
+        formatBudget() {
+            return new Intl.NumberFormat('ja-JP', {
+                style: 'currency',
+                currency: 'JPY'
+            }).format(this.budget);
+        },
+
+        overBudget() {
+            return this.budget < 0;
+        }
     }
 }
 </script>
@@ -27,4 +40,9 @@ export default {
     text-align: center;
     width: 100%;
 }
+
+.over-budget {
+    color: red;
+}
+
 </style>

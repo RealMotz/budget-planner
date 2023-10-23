@@ -1,0 +1,78 @@
+{
+    "months": [
+        {
+            "id": 1,
+            "month": "8",
+            "budget": 1000,
+            "weeks": [
+                {
+                    "id": 1,
+                    "start": "2023-08-01",
+                    "end": "2023-08-07",
+                    "budget": 0,
+                    "expenses": {
+                        "monday": 0,
+                        "tuesday": 0,
+                        "wednesday": 0,
+                        "thursday": 0,
+                        "friday": 0,
+                        "saturday": 0,
+                        "sunday": 0
+                    }
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "month": "10",
+            "budget": 5000,
+            "weeks": [
+                {
+                    "id": 1,
+                    "start": "2023-10-01",
+                    "end": "2023-10-07",
+                    "budget": 20000,
+                    "expenses": {
+                        "monday": 0,
+                        "tuesday": 0,
+                        "wednesday": 0,
+                        "thursday": 0,
+                        "friday": 0,
+                        "saturday": 0,
+                        "sunday": 0
+                    }
+                },
+                {
+                    "id": 2,
+                    "start": "2023-10-08",
+                    "end": "2023-10-14",
+                    "budget": 6000,
+                    "expenses": {
+                        "monday": 0,
+                        "tuesday": 0,
+                        "wednesday": 0,
+                        "thursday": 0,
+                        "friday": 0,
+                        "saturday": 0,
+                        "sunday": 0
+                    }
+                },
+                {
+                    "id": 3,
+                    "start": "2023-10-15",
+                    "end": "2023-10-21",
+                    "budget": 5000,
+                    "expenses": {
+                        "monday": 0,
+                        "tuesday": 0,
+                        "wednesday": 0,
+                        "thursday": 0,
+                        "friday": 0,
+                        "saturday": 0,
+                        "sunday": 0
+                    }
+                }
+            ]
+        }
+    ]
+}

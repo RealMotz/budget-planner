@@ -1,108 +1,141 @@
-<script setup>
-import BudgetDay from '@/components/BudgetDay.vue'
-</script>
-
 <template>
   <main>
     Weekly Budget Tracker
 
     <div class="weekly-budget">
-      <BudgetDay v-for="day in this.days" :key="day.day" :day="day.day" :budget="day.budget" />
+      <BudgetDay v-for="day in days" :key="day.day" :day="day.day" :budget="day.budget" />
     </div>
     <div class="today">
-      <h2>{{ currentDay().day }}</h2>
+      <h2>{{ currentDay.day }}</h2>
+      <p v-if="isBudgetSet"><strong>Budget</strong>: {{ budget }}</p>
     </div>
     <div v-if="isBudgetSet" class="add-expense data-input">
-      <input type="number" v-model="budget" placeholder="Add expense" />
-      <button @click="addExpense" v-bind="budget">Add</button>
+      <input type="number" v-model="spent" placeholder="Add expense" v-focus />
+      <button @click="addExpense">Add</button>
     </div>
-    <div v-else class="add-budget data-input">
-      <input type="number" v-model="budget" placeholder="Enter budget" />
-      <button @click="addBudget" v-bind="budget">Add</button>
+    <div v-else>
+      <div class="add-budget data-input">
+        <input type="number" v-model="newBudget" placeholder="Enter weekly budget" />
+        <button @click="addBudget">Add</button>
+      </div>
+      <div v-if="hasMonthlyBudget" class="data-input use-monthly-budget">
+        <button @click="useMonthlyBudget">Use monthly budget?</button>
+      </div>
     </div>
-
   </main>
 </template>
 
-<script>
-import budgetData from "@/data.json";
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import BudgetDay from '@/components/BudgetDay.vue';
+import { getMonthlyBudget, createWeeklyBudget } from "../services/BudgetService";
 
-export default {
-  components: {
-    BudgetDay
+const monthlyBudget = ref(null);
+const budget = ref(null);
+const newBudget = ref(null);
+const spent = ref(null);
+const days = ref([
+  {
+    day: "Monday",
+    budget: 0,
   },
-
-  data() {
-    return {
-      budget: "",
-      monthlyData: budgetData,
-      days: [
-        {
-          day: "Monday",
-          budget: 0,
-        },
-        {
-          day: "Tuesday",
-          budget: 0,
-        },
-        {
-          day: "Wednesday",
-          budget: 0,
-        },
-        {
-          day: "Thursday",
-          budget: 0,
-        },
-        {
-          day: "Friday",
-          budget: 0,
-        },
-        {
-          day: "Saturday",
-          budget: 0,
-        },
-        {
-          day: "Sunday",
-          budget: 0,
-        },
-      ],
-    }
+  {
+    day: "Tuesday",
+    budget: 0,
   },
-
-  created() {
-    if (this.isMonthlyBudgetSet) {
-      this.days.forEach((day) => {
-        day.budget = monthlyBudget / 7;
-      });
-    }
+  {
+    day: "Wednesday",
+    budget: 0,
   },
-
-  computed: {
-    isBudgetSet() {
-      if (this.monthlyData.budget > 0) {
-        return true
-      }
-
-      let date = new Date().toISOString().slice(0, 10);
-      let weeklyBudget = this.monthlyData.weeks.find((week) => {
-        return week.start <= date && week.end >= date;
-      });
-
-      return weeklyBudget ? true : false;
-    }
+  {
+    day: "Thursday",
+    budget: 0,
   },
-
-  methods: {
-    currentDay() {
-      return this.days[(new Date().getDay() + 6) % 7];
-    },
-    addExpense() {
-      this.currentDay().budget += this.budget;
-    },
-    addBudget() {
-      console.log("add budget");
-    }
+  {
+    day: "Friday",
+    budget: 0,
   },
+  {
+    day: "Saturday",
+    budget: 0,
+  },
+  {
+    day: "Sunday",
+    budget: 0,
+  }
+]);
+
+onMounted(() => {
+  getMonthlyBudget().then(data => {
+    monthlyBudget.value = data;
+    setBudget();
+    calculateDailyBudget();
+  }).catch(error => {
+    console.log("Failed to fetch monthly budget:", error);
+  });
+});
+
+const currentDay = computed(() => days.value[(new Date().getDay() + 6) % 7]);
+const isBudgetSet = computed(() => budget.value > 0);
+const hasMonthlyBudget = computed(() => monthlyBudget.value && monthlyBudget.value.budget > 0);
+
+const vFocus = {
+  mounted: (el) => el.focus()
+}
+
+function setBudget() {
+  const weeklyBudget = findCurrentWeek(monthlyBudget.value.weeks);
+  if (!weeklyBudget) {
+    budget.value = null;
+    return;
+  }
+
+  budget.value = weeklyBudget.budget;
+}
+
+function findCurrentWeek(weeks) {
+  if (!weeks) {
+    return null;
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  return weeks.find(week => week.start <= today && week.end >= today);
+}
+
+function calculateDailyBudget() {
+  if (!isBudgetSet) {
+    return;
+  }
+
+  const dailyBudget = budget.value / 7;
+  days.value.forEach((day) => {
+    day.budget = dailyBudget;
+  });
+}
+
+function addExpense() {
+  days.value[(new Date().getDay() + 6) % 7].budget -= spent.value;
+  spent.value = null;
+}
+
+async function createBudget() {
+  createWeeklyBudget(budget.value)
+    .then(() => {
+      calculateDailyBudget();
+    })
+    .catch((err) => {
+      console.log(err);
+    })
+}
+
+async function addBudget() {
+  budget.value = newBudget.value;
+  createBudget();
+}
+
+function useMonthlyBudget() {
+  budget.value = monthlyBudget.value.budget;
+  createBudget();
 }
 </script>
 
@@ -175,5 +208,11 @@ main {
 .add-expense button:hover {
   background-color: #4b7a3a;
   cursor: pointer;
+}
+
+.use-monthly-budget button:hover {
+  cursor: pointer;
+  background-color: #7a7e7a;
+  color: #fff;
 }
 </style>
