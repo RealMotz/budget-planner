@@ -3,15 +3,6 @@ const path = require('path');
 const budgetFilePath = path.join(path.dirname(require.main.filename), 'data', 'budget.json');
 
 
-function fetchAllBudget(callback) {
-    fs.readFile(budgetFilePath, (err, file) => {
-        if (err) {
-            callback([]);
-        }
-        callback(JSON.parse(file));
-    });
-};
-
 function fetchBudgetByMonth(callback) {
     if (!fs.existsSync(budgetFilePath)) {
         const newMonthlyBudget = createMonthlyBudget();
@@ -146,8 +137,41 @@ class Budget {
     }
 }
 
+class Expense {
+    static add(expense, callback = null) {
+        fs.readFile(budgetFilePath, (error, file) => {
+            if (error) {
+                return callback(error);
+            }
+
+            const weekDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+            try {
+                const budget = JSON.parse(file);
+                const currentMonth = new Date().toLocaleString("default", { month: "numeric" });
+                const currentMonthIndex = budget.months.findIndex(i => i.month == currentMonth);
+                const today = new Date();
+                const currentWeekIndex = budget.months[currentMonthIndex].weeks.findIndex(week => new Date(week.start) <= today && new Date(week.end) >= today);
+
+                const currWeekDay = weekDays[today.getDay()];
+                budget.months[currentMonthIndex].weeks[currentWeekIndex].expenses[currWeekDay] += expense;
+
+                fs.writeFile(budgetFilePath, JSON.stringify(budget), error => {
+                    if (error) {
+                        callback(error);
+                    }
+                })
+
+            } catch (error) {
+                callback(error);
+            }
+        });
+
+    }
+}
+
 module.exports = {
-    fetchAllBudget,
     fetchBudgetByMonth,
-    Budget
+    Budget,
+    Expense
 };
