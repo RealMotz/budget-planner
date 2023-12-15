@@ -3,18 +3,18 @@
     Weekly Budget Tracker
 
     <div class="weekly-budget">
-      <BudgetDay v-for="day in days" :key="day.day" :day="day.day" :budget="day.budget" />
+      <DailyBudget v-for="day in days" :key="day.day" :day="day.day" :budget="day.budget" data-test="daily-budget"/>
     </div>
     <div class="today">
-      <h2>{{ currentDay.day }}</h2>
+      <h2 data-test="today">{{ currentDay.day }}</h2>
       <p v-if="isBudgetSet"><strong>Budget</strong>: {{ budget }}</p>
     </div>
-    <div v-if="isBudgetSet" class="add-expense data-input">
+    <div v-if="isBudgetSet" class="add-expense data-input" data-test="add-expense">
       <input type="number" v-model="spent" placeholder="Add expense" v-focus />
-      <button @click="addExpense">Add</button>
+      <button @click="addExpense" data-test="add-budget">Add</button>
     </div>
     <div v-else>
-      <div class="add-budget data-input">
+      <div class="add-budget data-input" data-test="add-budget">
         <input type="number" v-model="newBudget" placeholder="Enter weekly budget" />
         <button @click="addBudget">Add</button>
       </div>
@@ -27,8 +27,8 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import BudgetDay from '@/components/BudgetDay.vue';
-import { getMonthlyBudget, createWeeklyBudget } from "../services/BudgetService";
+import DailyBudget from '@/components/DailyBudget.vue';
+import { getMonthlyBudget, createWeeklyBudget, createDailyExpense } from "../services/BudgetService";
 
 const monthlyBudget = ref(null);
 const budget = ref(null);
@@ -108,14 +108,22 @@ function calculateDailyBudget() {
   }
 
   const dailyBudget = budget.value / 7;
-  days.value.forEach((day) => {
-    day.budget = dailyBudget;
+  const weeklyBudget = findCurrentWeek(monthlyBudget.value.weeks);
+  if(!weeklyBudget) {
+    return;
+  }
+  days.value.forEach((weekday) => {
+    weekday.budget = dailyBudget - weeklyBudget.expenses[weekday.day.toLowerCase()];
   });
 }
 
 function addExpense() {
   days.value[(new Date().getDay() + 6) % 7].budget -= spent.value;
-  spent.value = null;
+  createDailyExpense(spent.value).then(() => {
+    spent.value = null;
+  }).catch((error) => {
+    console.log(error);
+  })
 }
 
 async function createBudget() {
